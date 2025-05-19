@@ -6,4 +6,4 @@ easyocr
 cellpose
 scikit-image
 pandas
-streamlit-drawable-canvas>=0.9.5
+streamlit-drawable-canvas==0.9.3
