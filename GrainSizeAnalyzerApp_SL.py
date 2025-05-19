@@ -52,9 +52,11 @@ if uploaded:
         # --------------------------------------------------
         st.subheader("Select Scale Bar Region")
         # Convert OpenCV BGR image to RGB, then to PIL Image
-        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         try:
+            img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
             pil_img = Image.fromarray(img_rgb)
+            if pil_img is None:
+                raise ValueError("PIL image conversion failed.")
             canvas_result = st_canvas(
                 fill_color="rgba(0,0,0,0)",
                 stroke_width=2,
