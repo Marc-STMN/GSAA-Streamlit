@@ -1,0 +1,9 @@
+streamlit
+opencv-python-headless
+numpy
+Pillow
+easyocr
+cellpose
+scikit-image
+pandas
+streamlit-drawable-canvas

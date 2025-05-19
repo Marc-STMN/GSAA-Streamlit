@@ -1,0 +1,10 @@
+# Created by pytest automatically.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+.env
+.venv
+pytest_cache/
