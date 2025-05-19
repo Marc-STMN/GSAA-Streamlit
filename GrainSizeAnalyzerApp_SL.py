@@ -48,11 +48,14 @@ if uploaded:
     # ROI Selection for Scale Bar via Canvas
     # --------------------------------------------------
     st.subheader("Select Scale Bar Region")
+    # Convert OpenCV BGR image to RGB, then to PIL Image
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    pil_img = Image.fromarray(img_rgb)
     canvas_result = st_canvas(
         fill_color="rgba(0,0,0,0)",
         stroke_width=2,
         stroke_color="#ff0000",
-        background_image=Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)),
+        background_image=pil_img,
         height=img_bgr.shape[0],
         width=img_bgr.shape[1],
         drawing_mode="rect",
