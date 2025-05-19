@@ -10,9 +10,14 @@ import tempfile
 from streamlit_drawable_canvas import st_canvas
 
 # --------------------------------------------------
+# App Config (must be first Streamlit command)
+# --------------------------------------------------
+st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
+
+# --------------------------------------------------
 # Model Loading with Caching for Performance
 # --------------------------------------------------
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def load_models():
     reader = easyocr.Reader(['en'], gpu=True)
     cp_model = models.CellposeModel(model_type='cyto', gpu=True)
@@ -23,7 +28,6 @@ reader, cp_model = load_models()
 # --------------------------------------------------
 # App Title
 # --------------------------------------------------
-st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
 st.title("Grain Size Analyzer")
 
 # --------------------------------------------------
