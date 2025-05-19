@@ -42,7 +42,7 @@ if uploaded:
 
     # Display original
     st.subheader("Original Image")
-    st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), use_column_width=True)
+    st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
 
     # --------------------------------------------------
     # ROI Selection for Scale Bar via Canvas
@@ -109,7 +109,7 @@ if uploaded:
                 mask_lbl = (masks==p.label).astype(np.uint8)*255
                 cnts, _ = cv2.findContours(mask_lbl, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 cv2.drawContours(annot[:crop.shape[0]], cnts, -1, (0,0,255), 1)
-            st.image(cv2.cvtColor(annot, cv2.COLOR_BGR2RGB), caption="Segments Annotated", use_column_width=True)
+            st.image(cv2.cvtColor(annot, cv2.COLOR_BGR2RGB), caption="Segments Annotated", use_container_width=True)
 
             # Display histogram
             st.subheader("Size Distribution")
