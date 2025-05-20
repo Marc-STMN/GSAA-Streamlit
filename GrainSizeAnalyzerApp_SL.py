@@ -19,7 +19,7 @@ st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
 # --------------------------------------------------
 @st.cache_resource
 def load_models():
-    reader   = easyocr.Reader(['en'], gpu=False)
+    reader = easyocr.Reader(['en'], gpu=False)
     cp_model = models.CellposeModel(model_type='cyto', gpu=False)
     return reader, cp_model
 
@@ -35,11 +35,13 @@ st.title("Grain Size Analyzer")
 # --------------------------------------------------
 uploaded = st.file_uploader("Upload SEM Image", type=["jpg", "png", "tif", "tiff"])
 if uploaded:
+    # Read image bytes into OpenCV
     file_bytes = np.asarray(bytearray(uploaded.read()), dtype=np.uint8)
     img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     if img_bgr is None:
         st.error("Could not decode image. Please upload a valid image file.")
     else:
+        # Convert to grayscale and PIL image
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         pil_img = Image.fromarray(img_rgb)
@@ -49,18 +51,8 @@ if uploaded:
         # --------------------------------------------------
         st.subheader("Select Scale-Bar ROI")
         canvas_result = st_canvas(
-    fill_color="rgba(0,0,0,0)",       # transparent draw layer
-    background_image=pil_img,           # SEM image as background
-    stroke_width=2,
-    stroke_color="#ff0000",
-    height=pil_img.height,
-    width=pil_img.width,
-    drawing_mode="rect",
-    key="canvas",
-),
-            background_color="rgba(0,0,0,0)",  # transparent canvas backdrop
-            background_image=pil_img,
-            background_image_opacity=1.0,        # show SEM image fully
+            fill_color="rgba(0,0,0,0)",  # transparent drawing layer
+            background_image=pil_img,      # SEM image underneath
             stroke_width=2,
             stroke_color="#ff0000",
             height=pil_img.height,
@@ -69,6 +61,7 @@ if uploaded:
             key="canvas",
         )
 
+        # If user has drawn a rectangle
         if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
             obj = canvas_result.json_data["objects"][0]
             x, y = int(obj["left"]), int(obj["top"])
@@ -98,11 +91,14 @@ if uploaded:
                 if 'um_per_px' not in st.session_state:
                     st.error("Please extract scale before running analysis.")
                 else:
+                    # Perform Cellpose segmentation
                     h_full, w_full = gray.shape
                     crop = gray[:int(0.9 * h_full), :]
                     masks, flows, styles = cp_model.eval(crop, diameter=None, channels=[0, 0])
                     props = measure.regionprops(masks)
                     diams_um = [p.equivalent_diameter * st.session_state.um_per_px for p in props]
+
+                    # Display results
                     stats = {
                         'mean': np.mean(diams_um),
                         'std': np.std(diams_um),
@@ -113,7 +109,7 @@ if uploaded:
                     st.subheader("Results")
                     st.write(stats)
 
-                    # Display annotated image
+                    # Annotate and show image
                     annot = img_bgr.copy()
                     for p in props:
                         mask_lbl = (masks == p.label).astype(np.uint8) * 255
@@ -121,12 +117,12 @@ if uploaded:
                         cv2.drawContours(annot[:crop.shape[0]], cnts, -1, (0, 0, 255), 1)
                     st.image(cv2.cvtColor(annot, cv2.COLOR_BGR2RGB), caption="Segments Annotated", use_container_width=True)
 
-                    # Display histogram
+                    # Show histogram
                     st.subheader("Size Distribution")
                     df = pd.DataFrame({'diameter_um': diams_um})
                     st.bar_chart(df['diameter_um'].value_counts(bins=20).sort_index())
 
-                    # Offer download
+                    # Download annotated image
                     buffered = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
                     cv2.imwrite(buffered.name, cv2.cvtColor(annot, cv2.COLOR_BGR2RGB))
                     st.download_button("Download Annotated Image", buffered.name)
