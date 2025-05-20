@@ -1,9 +1,12 @@
-git+https://github.com/bowespublishing/streamlit-drawable-canvas.git@develop#egg=streamlit-drawable-canvas
-# core deps
-streamlit>=1.24.0
+# Use the last Streamlit that the canvas component supports
+streamlit==1.40.0
+
+# Core ML & vision deps, all CPU-only
 torch==2.7.0
 torchvision==0.22.0
 torchaudio==2.7.0
+
+# Core app deps
 opencv-python>=4.7.0.72
 numpy>=1.24.0
 Pillow>=9.5.0
@@ -11,5 +14,10 @@ easyocr>=1.7
 cellpose>=2.2.2
 scikit-image>=0.21.0
 pandas>=2.0.0
+
+# drawable canvas (last known good PyPI release)
+streamlit-drawable-canvas==0.9.3
+
+# extras Cellpose might need
 tifffile
 matplotlib
