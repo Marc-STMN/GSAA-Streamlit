@@ -18,7 +18,7 @@ st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
 # Model Loading with Caching for Performance
 # --------------------------------------------------
 @st.cache_resource
- def load_models():
+def load_models():
     reader   = easyocr.Reader(['en'], gpu=False)
     cp_model = models.CellposeModel(model_type='cyto', gpu=False)
     return reader, cp_model
