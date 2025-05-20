@@ -1,5 +1,4 @@
-git+https://github.com/bowespublishing/streamlit-drawable-canvas.git@main#egg=streamlit-drawable-canvas
-
+git+https://github.com/bowespublishing/streamlit-drawable-canvas.git@develop#egg=streamlit-drawable-canvas
 # core deps
 streamlit>=1.24.0
 torch==2.7.0
