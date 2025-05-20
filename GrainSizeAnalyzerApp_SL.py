@@ -21,7 +21,7 @@ st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
 def load_models():
     reader = easyocr.Reader(['en'], gpu=False)
     # Use correct Cellpose constructor
-    cp_model = models.Cellpose(model_type='cyto', gpu=False)
+    cp_model = models.CellposeModel(model_type='cyto', gpu=False)
     return reader, cp_model
 
 reader, cp_model = load_models()
