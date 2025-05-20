@@ -57,7 +57,7 @@ if uploaded:
     width=pil_img.width,
     drawing_mode="rect",
     key="canvas",
-)",
+),
             background_color="rgba(0,0,0,0)",  # transparent canvas backdrop
             background_image=pil_img,
             background_image_opacity=1.0,        # show SEM image fully
