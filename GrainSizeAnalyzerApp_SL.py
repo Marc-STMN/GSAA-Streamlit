@@ -18,9 +18,8 @@ st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
 # Model Loading with Caching for Performance
 # --------------------------------------------------
 @st.cache_resource
-def load_models():
-    reader = easyocr.Reader(['en'], gpu=False)
-    # Use correct Cellpose constructor
+ def load_models():
+    reader   = easyocr.Reader(['en'], gpu=False)
     cp_model = models.CellposeModel(model_type='cyto', gpu=False)
     return reader, cp_model
 
@@ -36,33 +35,33 @@ st.title("Grain Size Analyzer")
 # --------------------------------------------------
 uploaded = st.file_uploader("Upload SEM Image", type=["jpg", "png", "tif", "tiff"])
 if uploaded:
-    # Read image bytes into OpenCV
     file_bytes = np.asarray(bytearray(uploaded.read()), dtype=np.uint8)
     img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     if img_bgr is None:
         st.error("Could not decode image. Please upload a valid image file.")
     else:
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        pil_img = Image.fromarray(img_rgb)
 
-        # Display original
-        st.subheader("Select Scale‐Bar ROI")
-
-        # if you still want a preview of the raw image, put them in two columns:
-        col1, col2 = st.columns(2)
+        # --------------------------------------------------
+        # ROI Selection for Scale Bar via Canvas
+        # --------------------------------------------------
+        st.subheader("Select Scale-Bar ROI")
+        col1, col2 = st.columns([1, 1])
         with col1:
-            st.image(pil_img, use_container_width=True)
+            st.image(pil_img, caption="Original SEM Image", use_container_width=True)
         with col2:
             canvas_result = st_canvas(
                 fill_color="rgba(0,0,0,0)",
                 stroke_width=2,
                 stroke_color="#ff0000",
-                background_image=pil_img,           # ← your SEM goes here
+                background_image=pil_img,
                 height=pil_img.height,
                 width=pil_img.width,
                 drawing_mode="rect",
                 key="canvas",
             )
-
 
         if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
             obj = canvas_result.json_data["objects"][0]
@@ -82,23 +81,22 @@ if uploaded:
             # --------------------------------------------------
             if st.button("Extract Scale"):
                 val_nm = st.number_input("Manually enter scale length (nm)", min_value=0.0, format="%.2f")
-                w_px = w
-                um_per_px = (val_nm / w_px) / 1000.0
-                st.success(f"Scale set: {val_nm} nm over {w_px}px = {um_per_px:.4f} µm/px")
+                um_per_px = (val_nm / w) / 1000.0
+                st.session_state.um_per_px = um_per_px
+                st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
 
             # --------------------------------------------------
             # Run Analysis
             # --------------------------------------------------
             if st.button("Run Analysis"):
-                # Ensure scale is set
-                if 'um_per_px' not in locals():
+                if 'um_per_px' not in st.session_state:
                     st.error("Please extract scale before running analysis.")
                 else:
                     h_full, w_full = gray.shape
                     crop = gray[:int(0.9 * h_full), :]
                     masks, flows, styles = cp_model.eval(crop, diameter=None, channels=[0, 0])
                     props = measure.regionprops(masks)
-                    diams_um = [p.equivalent_diameter * um_per_px for p in props]
+                    diams_um = [p.equivalent_diameter * st.session_state.um_per_px for p in props]
                     stats = {
                         'mean': np.mean(diams_um),
                         'std': np.std(diams_um),
