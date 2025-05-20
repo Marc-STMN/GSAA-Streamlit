@@ -45,23 +45,19 @@ if uploaded:
         pil_img = Image.fromarray(img_rgb)
 
         # --------------------------------------------------
-        # ROI Selection for Scale Bar via Canvas
+        # ROI Selection for Scale Bar via Canvas (no extra preview)
         # --------------------------------------------------
         st.subheader("Select Scale-Bar ROI")
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            st.image(pil_img, caption="Original SEM Image", use_container_width=True)
-        with col2:
-            canvas_result = st_canvas(
-                fill_color="rgba(0,0,0,0)",
-                stroke_width=2,
-                stroke_color="#ff0000",
-                background_image=pil_img,
-                height=pil_img.height,
-                width=pil_img.width,
-                drawing_mode="rect",
-                key="canvas",
-            )
+        canvas_result = st_canvas(
+            fill_color="rgba(0,0,0,0)",
+            stroke_width=2,
+            stroke_color="#ff0000",
+            background_image=pil_img,
+            height=pil_img.height,
+            width=pil_img.width,
+            drawing_mode="rect",
+            key="canvas",
+        )
 
         if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
             obj = canvas_result.json_data["objects"][0]
