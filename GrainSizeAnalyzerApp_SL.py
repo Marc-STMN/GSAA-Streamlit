@@ -45,25 +45,24 @@ if uploaded:
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
 
         # Display original
-        st.subheader("Original Image")
-        st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
+        st.subheader("Select Scale‐Bar ROI")
 
-        # --------------------------------------------------
-        # ROI Selection for Scale Bar via Canvas
-        # --------------------------------------------------
-        st.subheader("Select Scale Bar Region")
-        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-        pil_img = Image.fromarray(img_rgb)
-        canvas_result = st_canvas(
-            fill_color="rgba(0,0,0,0)",
-            stroke_width=2,
-            stroke_color="#ff0000",
-            background_image=pil_img,
-            height=img_bgr.shape[0],
-            width=img_bgr.shape[1],
-            drawing_mode="rect",
-            key="canvas",
-        )
+        # if you still want a preview of the raw image, put them in two columns:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.image(pil_img, use_container_width=True)
+        with col2:
+            canvas_result = st_canvas(
+                fill_color="rgba(0,0,0,0)",
+                stroke_width=2,
+                stroke_color="#ff0000",
+                background_image=pil_img,           # ← your SEM goes here
+                height=pil_img.height,
+                width=pil_img.width,
+                drawing_mode="rect",
+                key="canvas",
+            )
+
 
         if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
             obj = canvas_result.json_data["objects"][0]
