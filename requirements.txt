@@ -1,3 +1,7 @@
+--find-links https://download.pytorch.org/whl/cpu
+torch==2.0.1+cpu
+torchvision==0.15.2+cpu
+
 streamlit>=1.24.0
 opencv-python>=4.7.0.72
 numpy>=1.24.0
@@ -8,5 +12,6 @@ scikit-image>=0.21.0
 pandas>=2.0.0
 streamlit-drawable-canvas>=0.10.0
 
-# easyocr and cellpose need PyTorch
-torch>=2.0.0
+# extras Cellpose might need
+tifffile
+matplotlib
