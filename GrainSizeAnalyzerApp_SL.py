@@ -51,7 +51,7 @@ if uploaded:
         # --------------------------------------------------
         st.subheader("Select Scale-Bar ROI")
         canvas_result = st_canvas(
-            fill_color="rgba(0,0,0,0)",    # transparent draw layer
+            fill_color="rgba(0,0,0,0)",  # transparent drawing layer
             background_image=pil_img,      # SEM image underneath
             stroke_width=2,
             stroke_color="#ff0000",
