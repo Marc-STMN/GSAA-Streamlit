@@ -41,7 +41,7 @@ if uploaded:
     if img_bgr is None:
         st.error("Could not decode image. Please upload a valid image file.")
     else:
-        # Convert to grayscale and PIL image
+        # Convert to grayscale and to PIL Image
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         pil_img = Image.fromarray(img_rgb)
@@ -51,8 +51,9 @@ if uploaded:
         # --------------------------------------------------
         st.subheader("Select Scale-Bar ROI")
         canvas_result = st_canvas(
-            fill_color="rgba(0,0,0,0)",  # transparent drawing layer
-            background_image=pil_img,      # SEM image underneath
+            fill_color="rgba(0,0,0,0)",           # transparent drawing layer
+            background_image=pil_img,               # SEM image underneath
+            background_image_opacity=1.0,           # show SEM at full opacity
             stroke_width=2,
             stroke_color="#ff0000",
             height=pil_img.height,
@@ -91,14 +92,14 @@ if uploaded:
                 if 'um_per_px' not in st.session_state:
                     st.error("Please extract scale before running analysis.")
                 else:
-                    # Perform Cellpose segmentation
+                    # Perform segmentation
                     h_full, w_full = gray.shape
                     crop = gray[:int(0.9 * h_full), :]
                     masks, flows, styles = cp_model.eval(crop, diameter=None, channels=[0, 0])
                     props = measure.regionprops(masks)
                     diams_um = [p.equivalent_diameter * st.session_state.um_per_px for p in props]
 
-                    # Display results
+                    # Show results
                     stats = {
                         'mean': np.mean(diams_um),
                         'std': np.std(diams_um),
@@ -109,7 +110,7 @@ if uploaded:
                     st.subheader("Results")
                     st.write(stats)
 
-                    # Annotate and show image
+                    # Annotate and display image
                     annot = img_bgr.copy()
                     for p in props:
                         mask_lbl = (masks == p.label).astype(np.uint8) * 255
