@@ -1,7 +1,9 @@
-torch==2.2.2
-torchvision==0.17.2
-torchaudio==2.2.2
+# PyTorch & friends (CPU-only from PyPI)
+torch==2.7.0
+torchvision==0.22.0
+torchaudio==2.7.0
 
+# Core app deps
 streamlit>=1.24.0
 opencv-python>=4.7.0.72
 numpy>=1.24.0
@@ -10,6 +12,8 @@ easyocr>=1.7
 cellpose>=2.2.2
 scikit-image>=0.21.0
 pandas>=2.0.0
+
+# drawable canvas (latest on PyPI)
 streamlit-drawable-canvas==0.9.3
 
 # extras Cellpose might need
