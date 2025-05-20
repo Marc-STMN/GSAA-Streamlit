@@ -59,16 +59,6 @@ if uploaded:
             width=pil_img.width,
             drawing_mode="rect",
             key="canvas",
-        ),              # transparent drawing layer
-            background_color="rgba(0,0,0,0)",        # transparent canvas backdrop
-            background_image=pil_img,                  # SEM image underneath
-            background_image_opacity=1.0,              # show SEM at full opacity
-            stroke_width=2,
-            stroke_color="#ff0000",
-            height=pil_img.height,
-            width=pil_img.width,
-            drawing_mode="rect",
-            key="canvas",
         )
 
         # If user has drawn a rectangle
