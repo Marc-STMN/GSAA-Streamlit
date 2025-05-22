@@ -48,6 +48,8 @@ if uploaded:
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(img_rgb)
 
+    st.image(pil_img, caption="Kontrolle: PIL-Bild", use_container_width=True)
+
     # --------------------------------------------------
     # ROI Selection for Scale Bar via Canvas
     # --------------------------------------------------
