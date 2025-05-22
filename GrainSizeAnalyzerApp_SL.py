@@ -7,7 +7,7 @@ from cellpose import models
 from skimage import measure
 import pandas as pd
 import tempfile
-from streamlit_drawable_canvas import 
+from streamlit_drawable_canvas import st_canvas
 import inspect
 
 st.write("Canvas version:", getattr(__import__("streamlit_drawable_canvas"), "__version__", "unknown"))
