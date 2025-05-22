@@ -48,29 +48,23 @@ if uploaded:
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(img_rgb)
 
-    st.image(pil_img, caption="Kontrolle: PIL-Bild", use_container_width=True)
+    st.image(pil_img, caption="Kontrolle: SEM-Bild", use_container_width=True)
 
-    # --------------------------------------------------
-    # ROI Selection for Scale Bar via Canvas
-    # --------------------------------------------------
-    st.subheader("Select Scale-Bar ROI")
-    canvas_result = st_canvas(
-        background_image=pil_img,
-        fill_color="rgba(0,0,0,0)",  # transparent drawing layer
-        stroke_width=2,
-        stroke_color="#ff0000",
-        height=pil_img.height,
-        width=pil_img.width,
-        drawing_mode="rect",
-        key="canvas",
-    )
+    st.subheader("Manuelle ROI-Eingabe für Scale-Bar")
+    col1, col2 = st.columns(2)
+    with col1:
+        x = st.number_input("x (links)", min_value=0, max_value=pil_img.width-1, value=0)
+        y = st.number_input("y (oben)", min_value=0, max_value=pil_img.height-1, value=0)
+    with col2:
+        w = st.number_input("Breite (w)", min_value=1, max_value=pil_img.width-x, value=100)
+        h = st.number_input("Höhe (h)", min_value=1, max_value=pil_img.height-y, value=20)
 
-    # If user has drawn a rectangle
-    if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
-        obj = canvas_result.json_data["objects"][0]
-        x, y = int(obj["left"]), int(obj["top"])
-        w, h = int(obj["width"]), int(obj["height"])
-        st.success(f"Scale ROI: x={x}, y={y}, w={w}, h={h}")
+    if st.button("ROI anzeigen"):
+        img_annot = img_rgb.copy()
+        cv2.rectangle(img_annot, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        st.image(img_annot, caption="Bild mit ROI", use_container_width=True)
+
+        # Jetzt kannst du wie gewohnt mit gray[y:y+h, x:x+w] weiterarbeiten
 
         # --------------------------------------------------
         # Capture H-bar Template
