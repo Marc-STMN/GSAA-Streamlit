@@ -144,3 +144,9 @@ if uploaded:
                 st.download_button(
                     "Download Annotated Image", buffered.name
                 )
+
+    # --------------------------------------------------
+    # Kontrolle: Angezeigtes Bild
+    # --------------------------------------------------
+    st.subheader("Kontrolle: Angezeigtes Bild")
+    st.image(pil_img, caption="Kontrolle: PIL-Bild", use_container_width=True)
