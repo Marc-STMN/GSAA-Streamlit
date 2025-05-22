@@ -53,10 +53,10 @@ if uploaded:
     st.subheader("Manuelle ROI-Eingabe für Scale-Bar")
     col1, col2 = st.columns(2)
     with col1:
-        x = st.number_input("x (links)", min_value=0, max_value=pil_img.width-1, value=0)
-        y = st.number_input("y (oben)", min_value=0, max_value=pil_img.height-1, value=0)
+        x = st.number_input("x (links)", min_value=0, max_value=pil_img.width-1, value=20)
+        y = st.number_input("y (oben)", min_value=0, max_value=pil_img.height-1, value=725)
     with col2:
-        w = st.number_input("Breite (w)", min_value=1, max_value=pil_img.width-x, value=100)
+        w = st.number_input("Breite (w)", min_value=1, max_value=pil_img.width-x, value=60)
         h = st.number_input("Höhe (h)", min_value=1, max_value=pil_img.height-y, value=20)
 
     if st.button("ROI anzeigen"):
@@ -71,7 +71,13 @@ if uploaded:
         # --------------------------------------------------
         if st.button("Capture Template"):
             roi_gray = gray[y : y + h, x : x + w]
-            st.info("Template captured. Proceed to scale extraction.")
+            st.session_state["roi_gray"] = roi_gray  # Speichern!
+            st.success("Template captured. Proceed to scale extraction.")
+            st.image(roi_gray, caption="Captured ROI (Template)", use_container_width=True)
+
+        # Optional: Zeige das Template, falls schon gespeichert
+        if "roi_gray" in st.session_state:
+            st.image(st.session_state["roi_gray"], caption="Aktuelles Template", use_container_width=True)
 
         # --------------------------------------------------
         # Scale Extraction
