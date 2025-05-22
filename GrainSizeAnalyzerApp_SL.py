@@ -61,13 +61,6 @@ if uploaded:
         width=pil_img.width,
         drawing_mode="rect",
         key="canvas",
-    ),  # transparent drawing layer
-        stroke_width=2,
-        stroke_color="#ff0000",
-        height=pil_img.height,
-        width=pil_img.width,
-        drawing_mode="rect",
-        key="canvas",
     )
 
     # If user has drawn a rectangle
@@ -89,9 +82,12 @@ if uploaded:
         # --------------------------------------------------
         if st.button("Extract Scale"):
             val_nm = st.number_input("Manually enter scale length (nm)", min_value=0.0, format="%.2f")
-            um_per_px = (val_nm / w) / 1000.0
-            st.session_state.um_per_px = um_per_px
-            st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
+            if w == 0:
+                st.error("Width of ROI is zero. Please select a valid ROI.")
+            else:
+                um_per_px = (val_nm / w) / 1000.0
+                st.session_state.um_per_px = um_per_px
+                st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
 
         # --------------------------------------------------
         # Run Analysis
