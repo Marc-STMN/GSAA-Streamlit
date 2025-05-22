@@ -10,11 +10,8 @@ import tempfile
 from streamlit_drawable_canvas import st_canvas
 import inspect
 
-st.write("Canvas version:", getattr(__import__("streamlit_drawable_canvas"), "__version__", "unknown"))
-st.write("st_canvas accepts:", inspect.signature(st_canvas))
-
 # --------------------------------------------------
-# App Config (must be first Streamlit command)
+# App Config (muss als erstes Streamlit-Kommando stehen)
 # --------------------------------------------------
 st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
 
@@ -39,29 +36,27 @@ st.title("Grain Size Analyzer")
 # --------------------------------------------------
 uploaded = st.file_uploader("Upload SEM Image", type=["jpg", "png", "tif", "tiff"])
 
-st.set_page_config(layout="wide")
-
 if uploaded:
-    # Read image bytes into OpenCV
+    # Bild einlesen
     file_bytes = np.asarray(bytearray(uploaded.read()), dtype=np.uint8)
     img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     if img_bgr is None:
         st.error("Could not decode image. Please upload a valid image file.")
         st.stop()
 
-    # Convert to grayscale and prepare PIL image
+    # Bild konvertieren
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(img_rgb)
 
     # --------------------------------------------------
-    # ROI Selection for Scale Bar via Canvas
+    # ROI Auswahl für Scale-Bar via Canvas
     # --------------------------------------------------
     st.subheader("Select Scale-Bar ROI")
-    with st.container():
+    try:
         canvas_result = st_canvas(
-            background_image=pil_img,        # your PIL image
-            fill_color="rgba(0,0,0,0)",      # fully transparent draw layer
+            background_image=pil_img,
+            fill_color="rgba(0,0,0,0)",
             stroke_width=2,
             stroke_color="#ff0000",
             height=pil_img.height,
@@ -69,8 +64,11 @@ if uploaded:
             drawing_mode="rect",
             key="canvas",
         )
+    except Exception as e:
+        st.error(f"Error displaying canvas: {e}")
+        canvas_result = None
 
-    # If user has drawn a rectangle
+    # Wenn ein Rechteck gezeichnet wurde
     if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
         obj = canvas_result.json_data["objects"][0]
         x, y = int(obj["left"]), int(obj["top"])
@@ -89,9 +87,12 @@ if uploaded:
         # --------------------------------------------------
         if st.button("Extract Scale"):
             val_nm = st.number_input("Manually enter scale length (nm)", min_value=0.0, format="%.2f")
-            um_per_px = (val_nm / w) / 1000.0
-            st.session_state.um_per_px = um_per_px
-            st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
+            if w == 0:
+                st.error("Width of ROI is zero. Please select a valid ROI.")
+            else:
+                um_per_px = (val_nm / w) / 1000.0
+                st.session_state.um_per_px = um_per_px
+                st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
 
         # --------------------------------------------------
         # Run Analysis
@@ -116,7 +117,7 @@ if uploaded:
                 st.subheader("Results")
                 st.write(stats)
 
-                # Annotate and display image
+                # Annotiertes Bild anzeigen
                 annot = img_bgr.copy()
                 for p in props:
                     mask_lbl = (masks == p.label).astype(np.uint8) * 255
@@ -130,12 +131,12 @@ if uploaded:
                     use_container_width=True,
                 )
 
-                # Show histogram
+                # Histogramm anzeigen
                 st.subheader("Size Distribution")
                 df = pd.DataFrame({"diameter_um": diams_um})
                 st.bar_chart(df["diameter_um"].value_counts(bins=20).sort_index())
 
-                # Download annotated image
+                # Annotiertes Bild zum Download anbieten
                 buffered = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
                 cv2.imwrite(
                     buffered.name, cv2.cvtColor(annot, cv2.COLOR_BGR2RGB)
