@@ -61,7 +61,7 @@ if uploaded:
         width=pil_img.width,
         drawing_mode="rect",
         key="canvas",
-    )",  # transparent drawing layer
+    ),  # transparent drawing layer
         stroke_width=2,
         stroke_color="#ff0000",
         height=pil_img.height,
