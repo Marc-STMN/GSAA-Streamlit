@@ -7,7 +7,11 @@ from cellpose import models
 from skimage import measure
 import pandas as pd
 import tempfile
-from streamlit_drawable_canvas import st_canvas
+from streamlit_drawable_canvas import 
+import inspect
+
+st.write("Canvas version:", getattr(__import__("streamlit_drawable_canvas"), "__version__", "unknown"))
+st.write("st_canvas accepts:", inspect.signature(st_canvas))
 
 # --------------------------------------------------
 # App Config (must be first Streamlit command)
@@ -35,6 +39,8 @@ st.title("Grain Size Analyzer")
 # --------------------------------------------------
 uploaded = st.file_uploader("Upload SEM Image", type=["jpg", "png", "tif", "tiff"])
 
+st.set_page_config(layout="wide")
+
 if uploaded:
     # Read image bytes into OpenCV
     file_bytes = np.asarray(bytearray(uploaded.read()), dtype=np.uint8)
@@ -52,17 +58,17 @@ if uploaded:
     # ROI Selection for Scale Bar via Canvas
     # --------------------------------------------------
     st.subheader("Select Scale-Bar ROI")
-    canvas_result = st_canvas(
-        background_image=pil_img,
-        background_image_opacity=1.0,
-        fill_color="rgba(0,0,0,0)",  # transparent drawing layer
-        stroke_width=2,
-        stroke_color="#ff0000",
-        height=pil_img.height,
-        width=pil_img.width,
-        drawing_mode="rect",
-        key="canvas",
-    )
+    with st.container():
+        canvas_result = st_canvas(
+            background_image=pil_img,        # your PIL image
+            fill_color="rgba(0,0,0,0)",      # fully transparent draw layer
+            stroke_width=2,
+            stroke_color="#ff0000",
+            height=pil_img.height,
+            width=pil_img.width,
+            drawing_mode="rect",
+            key="canvas",
+        )
 
     # If user has drawn a rectangle
     if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
