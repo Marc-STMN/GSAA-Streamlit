@@ -8,10 +8,9 @@ from skimage import measure
 import pandas as pd
 import tempfile
 from streamlit_drawable_canvas import st_canvas
-import inspect
 
 # --------------------------------------------------
-# App Config (muss als erstes Streamlit-Kommando stehen)
+# App Config (must be first Streamlit command)
 # --------------------------------------------------
 st.set_page_config(page_title="Grain Size Analyzer", layout="wide")
 
@@ -37,38 +36,41 @@ st.title("Grain Size Analyzer")
 uploaded = st.file_uploader("Upload SEM Image", type=["jpg", "png", "tif", "tiff"])
 
 if uploaded:
-    # Bild einlesen
+    # Read image bytes into OpenCV
     file_bytes = np.asarray(bytearray(uploaded.read()), dtype=np.uint8)
     img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     if img_bgr is None:
         st.error("Could not decode image. Please upload a valid image file.")
         st.stop()
 
-    # Bild konvertieren
+    # Convert to grayscale and prepare PIL image
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     pil_img = Image.fromarray(img_rgb)
 
     # --------------------------------------------------
-    # ROI Auswahl für Scale-Bar via Canvas
+    # ROI Selection for Scale Bar via Canvas
     # --------------------------------------------------
     st.subheader("Select Scale-Bar ROI")
-    try:
-        canvas_result = st_canvas(
-            background_image=pil_img,
-            fill_color="rgba(0,0,0,0)",
-            stroke_width=2,
-            stroke_color="#ff0000",
-            height=pil_img.height,
-            width=pil_img.width,
-            drawing_mode="rect",
-            key="canvas",
-        )
-    except Exception as e:
-        st.error(f"Error displaying canvas: {e}")
-        canvas_result = None
+    canvas_result = st_canvas(
+        background_image=pil_img,
+        fill_color="rgba(0,0,0,0)",  # transparent drawing layer
+        stroke_width=2,
+        stroke_color="#ff0000",
+        height=pil_img.height,
+        width=pil_img.width,
+        drawing_mode="rect",
+        key="canvas",
+    )",  # transparent drawing layer
+        stroke_width=2,
+        stroke_color="#ff0000",
+        height=pil_img.height,
+        width=pil_img.width,
+        drawing_mode="rect",
+        key="canvas",
+    )
 
-    # Wenn ein Rechteck gezeichnet wurde
+    # If user has drawn a rectangle
     if canvas_result and canvas_result.json_data and canvas_result.json_data.get("objects"):
         obj = canvas_result.json_data["objects"][0]
         x, y = int(obj["left"]), int(obj["top"])
@@ -87,12 +89,9 @@ if uploaded:
         # --------------------------------------------------
         if st.button("Extract Scale"):
             val_nm = st.number_input("Manually enter scale length (nm)", min_value=0.0, format="%.2f")
-            if w == 0:
-                st.error("Width of ROI is zero. Please select a valid ROI.")
-            else:
-                um_per_px = (val_nm / w) / 1000.0
-                st.session_state.um_per_px = um_per_px
-                st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
+            um_per_px = (val_nm / w) / 1000.0
+            st.session_state.um_per_px = um_per_px
+            st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
 
         # --------------------------------------------------
         # Run Analysis
@@ -117,7 +116,7 @@ if uploaded:
                 st.subheader("Results")
                 st.write(stats)
 
-                # Annotiertes Bild anzeigen
+                # Annotate and display image
                 annot = img_bgr.copy()
                 for p in props:
                     mask_lbl = (masks == p.label).astype(np.uint8) * 255
@@ -131,12 +130,12 @@ if uploaded:
                     use_container_width=True,
                 )
 
-                # Histogramm anzeigen
+                # Show histogram
                 st.subheader("Size Distribution")
                 df = pd.DataFrame({"diameter_um": diams_um})
                 st.bar_chart(df["diameter_um"].value_counts(bins=20).sort_index())
 
-                # Annotiertes Bild zum Download anbieten
+                # Download annotated image
                 buffered = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
                 cv2.imwrite(
                     buffered.name, cv2.cvtColor(annot, cv2.COLOR_BGR2RGB)
@@ -144,9 +143,3 @@ if uploaded:
                 st.download_button(
                     "Download Annotated Image", buffered.name
                 )
-
-    # --------------------------------------------------
-    # Kontrolle: Angezeigtes Bild
-    # --------------------------------------------------
-    st.subheader("Kontrolle: Angezeigtes Bild")
-    st.image(pil_img, caption="Kontrolle: PIL-Bild", use_container_width=True)
