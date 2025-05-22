@@ -59,85 +59,93 @@ if uploaded:
         w = st.number_input("Breite (w)", min_value=1, max_value=pil_img.width-x, value=60)
         h = st.number_input("Höhe (h)", min_value=1, max_value=pil_img.height-y, value=20)
 
+    # ROI-Koordinaten merken
+    if "roi_coords" not in st.session_state:
+        st.session_state.roi_coords = None
+
+    if "roi_gray" not in st.session_state:
+        st.session_state.roi_gray = None
+
+    # ROI anzeigen und speichern
     if st.button("ROI anzeigen"):
+        st.session_state.roi_coords = (x, y, w, h)
+
+    # Bild mit Rechteck immer anzeigen, wenn Koordinaten vorhanden
+    if st.session_state.roi_coords is not None:
+        x, y, w, h = st.session_state.roi_coords
         img_annot = img_rgb.copy()
-        cv2.rectangle(img_annot, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        cv2.rectangle(img_annot, (x, y), (x + w, y + h), (255, 0, 0), 2)
         st.image(img_annot, caption="Originalbild mit ROI", use_container_width=True)
 
-        # Jetzt kannst du wie gewohnt mit gray[y:y+h, x:x+w] weiterarbeiten
-
-        # --------------------------------------------------
-        # Capture H-bar Template
-        # --------------------------------------------------
+        # Capture Template
         if st.button("Capture Template"):
             roi_gray = gray[y : y + h, x : x + w]
-            st.session_state["roi_gray"] = roi_gray  # Speichern!
+            st.session_state.roi_gray = roi_gray
             st.success("Template captured. Proceed to scale extraction.")
-            st.image(roi_gray, caption="Captured ROI (Template)", use_container_width=True)
 
-        # Optional: Zeige das Template, falls schon gespeichert
-        if "roi_gray" in st.session_state:
-            st.image(st.session_state["roi_gray"], caption="Aktuelles Template", use_container_width=True)
+    # Template immer anzeigen, wenn vorhanden
+    if st.session_state.roi_gray is not None:
+        st.image(st.session_state.roi_gray, caption="Aktuelles Template", use_container_width=True)
 
-        # --------------------------------------------------
-        # Scale Extraction
-        # --------------------------------------------------
-        if st.button("Extract Scale"):
-            val_nm = st.number_input("Manually enter scale length (nm)", min_value=0.0, format="%.2f")
-            if w == 0:
-                st.error("Width of ROI is zero. Please select a valid ROI.")
-            else:
-                um_per_px = (val_nm / w) / 1000.0
-                st.session_state.um_per_px = um_per_px
-                st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
+    # --------------------------------------------------
+    # Scale Extraction
+    # --------------------------------------------------
+    if st.button("Extract Scale"):
+        val_nm = st.number_input("Manually enter scale length (nm)", min_value=0.0, format="%.2f")
+        if w == 0:
+            st.error("Width of ROI is zero. Please select a valid ROI.")
+        else:
+            um_per_px = (val_nm / w) / 1000.0
+            st.session_state.um_per_px = um_per_px
+            st.success(f"Scale set: {val_nm} nm over {w}px = {um_per_px:.4f} µm/px")
 
-        # --------------------------------------------------
-        # Run Analysis
-        # --------------------------------------------------
-        if st.button("Run Analysis"):
-            if "um_per_px" not in st.session_state:
-                st.error("Please extract scale before running analysis.")
-            else:
-                h_full, w_full = gray.shape
-                crop = gray[: int(0.9 * h_full), :]
-                masks, flows, styles = cp_model.eval(crop, diameter=None, channels=[0, 0])
-                props = measure.regionprops(masks)
-                diams_um = [p.equivalent_diameter * st.session_state.um_per_px for p in props]
+    # --------------------------------------------------
+    # Run Analysis
+    # --------------------------------------------------
+    if st.button("Run Analysis"):
+        if "um_per_px" not in st.session_state:
+            st.error("Please extract scale before running analysis.")
+        else:
+            h_full, w_full = gray.shape
+            crop = gray[: int(0.9 * h_full), :]
+            masks, flows, styles = cp_model.eval(crop, diameter=None, channels=[0, 0])
+            props = measure.regionprops(masks)
+            diams_um = [p.equivalent_diameter * st.session_state.um_per_px for p in props]
 
-                stats = {
-                    "mean": np.mean(diams_um),
-                    "std": np.std(diams_um),
-                    "min": np.min(diams_um),
-                    "max": np.max(diams_um),
-                    "count": len(diams_um),
-                }
-                st.subheader("Results")
-                st.write(stats)
+            stats = {
+                "mean": np.mean(diams_um),
+                "std": np.std(diams_um),
+                "min": np.min(diams_um),
+                "max": np.max(diams_um),
+                "count": len(diams_um),
+            }
+            st.subheader("Results")
+            st.write(stats)
 
-                # Annotate and display image
-                annot = img_bgr.copy()
-                for p in props:
-                    mask_lbl = (masks == p.label).astype(np.uint8) * 255
-                    cnts, _ = cv2.findContours(
-                        mask_lbl, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-                    )
-                    cv2.drawContours(annot[: crop.shape[0]], cnts, -1, (0, 0, 255), 1)
-                st.image(
-                    cv2.cvtColor(annot, cv2.COLOR_BGR2RGB),
-                    caption="Segments Annotated",
-                    use_container_width=True,
+            # Annotate and display image
+            annot = img_bgr.copy()
+            for p in props:
+                mask_lbl = (masks == p.label).astype(np.uint8) * 255
+                cnts, _ = cv2.findContours(
+                    mask_lbl, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
                 )
+                cv2.drawContours(annot[: crop.shape[0]], cnts, -1, (0, 0, 255), 1)
+            st.image(
+                cv2.cvtColor(annot, cv2.COLOR_BGR2RGB),
+                caption="Segments Annotated",
+                use_container_width=True,
+            )
 
-                # Show histogram
-                st.subheader("Size Distribution")
-                df = pd.DataFrame({"diameter_um": diams_um})
-                st.bar_chart(df["diameter_um"].value_counts(bins=20).sort_index())
+            # Show histogram
+            st.subheader("Size Distribution")
+            df = pd.DataFrame({"diameter_um": diams_um})
+            st.bar_chart(df["diameter_um"].value_counts(bins=20).sort_index())
 
-                # Download annotated image
-                buffered = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-                cv2.imwrite(
-                    buffered.name, cv2.cvtColor(annot, cv2.COLOR_BGR2RGB)
-                )
-                st.download_button(
-                    "Download Annotated Image", buffered.name
-                )
+            # Download annotated image
+            buffered = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            cv2.imwrite(
+                buffered.name, cv2.cvtColor(annot, cv2.COLOR_BGR2RGB)
+            )
+            st.download_button(
+                "Download Annotated Image", buffered.name
+            )
