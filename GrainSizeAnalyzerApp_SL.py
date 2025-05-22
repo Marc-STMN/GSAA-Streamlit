@@ -62,7 +62,7 @@ if uploaded:
     if st.button("ROI anzeigen"):
         img_annot = img_rgb.copy()
         cv2.rectangle(img_annot, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        st.image(img_annot, caption="Bild mit ROI", use_container_width=True)
+        st.image(img_annot, caption="Originalbild mit ROI", use_container_width=True)
 
         # Jetzt kannst du wie gewohnt mit gray[y:y+h, x:x+w] weiterarbeiten
 
